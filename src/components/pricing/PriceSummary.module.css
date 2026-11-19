@@ -1,0 +1,33 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.row dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.basis {
+  color: var(--color-text-muted);
+}
+
+.total {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.note {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
