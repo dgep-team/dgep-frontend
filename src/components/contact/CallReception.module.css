@@ -1,0 +1,73 @@
+/* Full-width button, matches the secondary Button style */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-5);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--color-surface-accent);
+}
+
+/* Prompt strip */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-primary-soft);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-accent);
+}
+
+.icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 700;
+}
+
+.muted {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.call {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.call:hover {
+  background: var(--color-primary-hover);
+}

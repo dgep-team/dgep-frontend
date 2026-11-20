@@ -7,14 +7,16 @@ import { Screen, SplitLayout } from '../../components/layout/AppShell.jsx'
 import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { Card } from '../../components/ui/Card.jsx'
+import { CallReception } from '../../components/contact/CallReception.jsx'
 import { TextField } from '../../components/ui/TextField.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
+import { usePolling } from '../../hooks/usePolling.js'
 import { formatTimestamp, toIsoDate } from '../../lib/dates.js'
 import { ERROR_CODES, errorMessage, fieldErrors } from '../../services/api/errors.js'
 import { getBooking } from '../../services/bookingService.js'
 import { createRequest, listCategories, listRequests } from '../../services/requestService.js'
 import { canMakeRequests } from '../bookings/bookingStatus.js'
-import { categoryName, localDateTimeToIso, REQUEST_STATUS_LABEL } from './requestStatus.js'
+import { categoryName, isOpenRequest, localDateTimeToIso, REQUEST_STATUS_LABEL, STATUS_POLL_MS } from './requestStatus.js'
 import styles from './Requests.module.css'
 
 const EMPTY_FORM = { category: '', note: '', preferredTime: '' }
@@ -35,6 +37,8 @@ export function RequestsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [submit, setSubmit] = useState({ status: 'idle' })
+  // Keep statuses current while any request is still with the hotel.
+  usePolling(page.refresh, { intervalMs: STATUS_POLL_MS, enabled: Boolean(page.data?.requests?.some(isOpenRequest)) })
 
   const header = <ScreenHeader title="Requests" backTo={`/bookings/${bookingId}`} />
 
@@ -95,7 +99,7 @@ export function RequestsPage() {
                         <span className={styles.itemTitle}>{categoryName(categories, request.category)}</span>
                         <span className={styles.meta}>{request.note || formatTimestamp(request.createdAt)}</span>
                       </span>
-                      <span className={styles.status} data-status={request.status}>
+                      <span className={styles.status} data-status={request.status} aria-live="polite">
                         {REQUEST_STATUS_LABEL[request.status] ?? request.status}
                       </span>
                       <ChevronRight size={18} aria-hidden="true" />
@@ -107,6 +111,7 @@ export function RequestsPage() {
           </Card>
         }
       >
+        {allowed && <CallReception phone={booking.room?.hotel?.phone} hotelName={booking.room?.hotel?.name} />}
         {!allowed ? (
           <Alert tone="info" title="Requests open once your booking is paid">
             You can ask for towels, housekeeping, repairs and more during your stay.

@@ -12,7 +12,9 @@ import { useAsync } from '../../hooks/useAsync.js'
 import { priceWithAddOns } from '../../lib/pricing.js'
 import { loginUrl } from '../../lib/redirect.js'
 import { ERROR_CODES, errorMessage, fieldErrors } from '../../services/api/errors.js'
-import { cancelBooking, createBooking } from '../../services/bookingService.js'
+import { createBooking } from '../../services/bookingService.js'
+import { releaseAbandonedHold } from '../payment/loadPayableBooking.js'
+import { formatKobo } from '../../lib/money.js'
 import { getHotel } from '../../services/hotelService.js'
 import { useAuth } from '../../state/authContext.js'
 import { selectionKey, useBookingFlow } from '../../state/bookingFlowContext.js'
@@ -84,10 +86,14 @@ export function BookingDetailsPage() {
   // The server confirms the exact amount when the booking is created.
   const price = isAvailable ? priceWithAddOns(roomType.price, hotel.addOns, validAddOns, { guests }) : null
 
+  const selection = { roomTypeId, checkIn, checkOut, guests, addOns: validAddOns }
+  const currentKey = selectionKey(selection)
+  // The server priced this exact selection differently from what was shown.
+  const priceChange = submit.status === 'priceChanged' && submit.key === currentKey ? submit : null
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const selection = { roomTypeId, checkIn, checkOut, guests, addOns: validAddOns }
-    const key = selectionKey(selection)
+    const key = currentKey
 
     // Same selection as the unpaid booking we already made: reuse it.
     if (draft.pending?.key === key) {
@@ -104,8 +110,8 @@ export function BookingDetailsPage() {
 
     setSubmit({ status: 'submitting' })
     try {
-      // Give back the room held by an earlier, now-abandoned selection.
-      if (draft.pending?.bookingId && isLoggedIn) cancelBooking(draft.pending.bookingId).catch(() => {})
+      // Give back the room held by an earlier, now-abandoned selection (only if it's still unpaid).
+      if (draft.pending?.bookingId && isLoggedIn) releaseAbandonedHold(draft.pending.bookingId).catch(() => {})
 
       const guestDetails = isLoggedIn
         ? undefined
@@ -115,8 +121,17 @@ export function BookingDetailsPage() {
             lastName: guest.lastName.trim(),
             ...(guest.phone.trim() && { phone: guest.phone.trim() }),
           }
-      const { booking, price } = await createBooking({ ...selection, guest: guestDetails })
-      updateDraft({ pending: { bookingId: booking.id, key, price } })
+      const { booking, price: serverPrice } = await createBooking({ ...selection, guest: guestDetails })
+      updateDraft({ pending: { bookingId: booking.id, key, price: serverPrice } })
+
+      // Price-change warning (BR-07): never send the guest to pay a total they
+      // haven't seen. The room is now held, so continuing reuses this booking.
+      const charged = serverPrice?.total ?? booking.totalAmount
+      if (price && charged !== price.total) {
+        setSubmit({ status: 'priceChanged', key, from: price.total, to: charged })
+        hotelRequest.refresh()
+        return
+      }
       navigate(`/bookings/${booking.id}/pay`)
     } catch (error) {
       setErrors(fieldErrors(error))
@@ -139,6 +154,13 @@ export function BookingDetailsPage() {
                   note={validAddOns.length > 0 ? 'Includes your extras and all taxes. No charges at the hotel.' : undefined}
                 />
               )}
+              {priceChange && (
+                <Alert tone="warning" title="The price has changed">
+                  The total for this stay is now <strong>{formatKobo(priceChange.to)}</strong> (was{' '}
+                  {formatKobo(priceChange.from)}). Your room is held for 30 minutes. Check the breakdown, then continue
+                  to pay the new total.
+                </Alert>
+              )}
               {submit.status === 'error' && <SubmitError error={submit.error} />}
               <Button
                 type="submit"
@@ -148,7 +170,7 @@ export function BookingDetailsPage() {
                 loadingLabel="Reserving your room…"
                 iconRight={<ArrowRight size={20} aria-hidden="true" />}
               >
-                Continue to payment
+                {priceChange ? `Continue with ${formatKobo(priceChange.to)}` : 'Continue to payment'}
               </Button>
             </>
           }

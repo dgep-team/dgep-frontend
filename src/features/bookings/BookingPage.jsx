@@ -7,9 +7,11 @@ import { Screen, SplitLayout } from '../../components/layout/AppShell.jsx'
 import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { Card } from '../../components/ui/Card.jsx'
+import { CallReception } from '../../components/contact/CallReception.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
 import { formatClock, formatDateRange, formatTimestamp, nightsBetween, pluralize } from '../../lib/dates.js'
 import { formatKobo } from '../../lib/money.js'
+import { telHref } from '../../lib/phone.js'
 import { ERROR_CODES, errorMessage } from '../../services/api/errors.js'
 import { BOOKING_STATUS, cancelBooking, getArrivalInfo } from '../../services/bookingService.js'
 import { loadPayableBooking } from '../payment/loadPayableBooking.js'
@@ -78,6 +80,9 @@ export function BookingPage() {
               <Button fullWidth variant="secondary" to={`/bookings/${data.id}/check-in`}>
                 View check-in
               </Button>
+            )}
+            {data.status !== BOOKING_STATUS.cancelled && (
+              <CallReception variant="button" phone={hotel?.phone ?? arrival?.phone} hotelName={hotel?.name} />
             )}
             {canMakeRequests(data) && (
               <Button fullWidth variant="secondary" to={`/bookings/${data.id}/requests`}>
@@ -193,7 +198,7 @@ function ArrivalCard({ arrival }) {
         {arrival.phone && (
           <li>
             <Phone size={18} aria-hidden="true" />
-            <a href={`tel:${arrival.phone.replace(/\s/g, '')}`}>{arrival.phone}</a>
+            <a href={telHref(arrival.phone)}>{arrival.phone}</a>
           </li>
         )}
         <li>

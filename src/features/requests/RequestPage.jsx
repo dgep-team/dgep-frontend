@@ -6,11 +6,14 @@ import { Screen } from '../../components/layout/AppShell.jsx'
 import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { Card } from '../../components/ui/Card.jsx'
+import { CallReception } from '../../components/contact/CallReception.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
+import { usePolling } from '../../hooks/usePolling.js'
 import { formatTimestamp } from '../../lib/dates.js'
 import { ERROR_CODES, errorMessage } from '../../services/api/errors.js'
+import { getBooking } from '../../services/bookingService.js'
 import { cancelRequest, getRequest, listCategories, REQUEST_STATUS } from '../../services/requestService.js'
-import { categoryName, REQUEST_STATUS_LABEL } from './requestStatus.js'
+import { categoryName, isOpenRequest, REQUEST_STATUS_LABEL, STATUS_POLL_MS } from './requestStatus.js'
 import styles from './Requests.module.css'
 
 function describeEvent(event) {
@@ -25,9 +28,13 @@ export function RequestPage() {
   const { requestId } = useParams()
   const page = useAsync(async (signal) => {
     const [request, categories] = await Promise.all([getRequest(requestId, { signal }), listCategories({ signal })])
-    return { request, categories }
+    // Only for the hotel's phone number; the request shows without it.
+    const booking = await getBooking(request.bookingId, { signal }).catch(() => null)
+    return { request, categories, hotel: booking?.room?.hotel ?? null }
   }, requestId)
   const [cancel, setCancel] = useState({ status: 'idle' })
+  // Staff update the status from their dashboard; keep it current while the request is open.
+  usePolling(page.refresh, { intervalMs: STATUS_POLL_MS, enabled: isOpenRequest(page.data?.request) })
 
   const backTo = page.data?.request?.bookingId ? `/bookings/${page.data.request.bookingId}/requests` : '/bookings'
   const header = <ScreenHeader title="Request" backTo={backTo} />
@@ -41,7 +48,7 @@ export function RequestPage() {
     )
   }
 
-  const { request, categories } = page.data
+  const { request, categories, hotel } = page.data
 
   const doCancel = async () => {
     setCancel({ status: 'cancelling' })
@@ -64,10 +71,11 @@ export function RequestPage() {
             <h1 id="request-heading" className={styles.sectionTitle}>
               {categoryName(categories, request.category)}
             </h1>
-            <span className={styles.status} data-status={request.status}>
+            <span className={styles.status} data-status={request.status} aria-live="polite">
               {REQUEST_STATUS_LABEL[request.status] ?? request.status}
             </span>
           </div>
+          {isOpenRequest(request) && <p className={styles.meta}>Status updates automatically.</p>}
           {request.note && <p>{request.note}</p>}
           <p className={styles.meta}>
             Sent {formatTimestamp(request.createdAt)}
@@ -100,6 +108,7 @@ export function RequestPage() {
             : errorMessage(cancel.error)}
         </Alert>
       )}
+      <CallReception phone={hotel?.phone} hotelName={hotel?.name} />
       {request.status === REQUEST_STATUS.submitted && (
         <Button variant="secondary" fullWidth onClick={doCancel} loading={cancel.status === 'cancelling'} loadingLabel="Cancelling…">
           Cancel request

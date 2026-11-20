@@ -1,5 +1,12 @@
 import { REQUEST_STATUS } from '../../services/requestService.js'
 
+/** Polled while a request is open, so staff updates show up on their own. */
+export const STATUS_POLL_MS = 15_000
+
+/** Still being handled by the hotel (status can change). */
+export const isOpenRequest = (request) =>
+  request?.status === REQUEST_STATUS.submitted || request?.status === REQUEST_STATUS.inProgress
+
 export const REQUEST_STATUS_LABEL = {
   [REQUEST_STATUS.submitted]: 'Sent to the hotel',
   [REQUEST_STATUS.inProgress]: 'In progress',
