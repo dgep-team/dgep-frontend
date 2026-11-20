@@ -18,6 +18,7 @@ import { selectionKey, useBookingFlow } from '../../state/bookingFlowContext.js'
 import { AddOnsCard } from './components/AddOnsCard.jsx'
 import { GuestDetailsCard } from './components/GuestDetailsCard.jsx'
 import { EMPTY_GUEST, validateGuest } from './guestDetails.js'
+import { SaveButton } from '../../components/saved/SaveButton.jsx'
 import { HotelSummaryCard } from './components/HotelSummaryCard.jsx'
 import { RoomSelectedCard } from './components/RoomSelectedCard.jsx'
 import { StayDetailsCard } from './components/StayDetailsCard.jsx'
@@ -174,9 +175,12 @@ export function BookingDetailsPage() {
 
           {roomType && (
             <section className={styles.section} aria-labelledby="room-heading">
-              <h2 id="room-heading" className={styles.sectionTitle}>
-                Room Selected
-              </h2>
+              <div className={styles.sectionHead}>
+                <h2 id="room-heading" className={styles.sectionTitle}>
+                  Room Selected
+                </h2>
+                <SaveButton kind="room" hotel={hotel} roomType={roomType} variant="inline" />
+              </div>
               <RoomSelectedCard roomType={roomType} />
             </section>
           )}

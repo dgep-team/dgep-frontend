@@ -424,6 +424,12 @@
   font-weight: 700;
 }
 
+.featureSave {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+
 .featureBody {
   display: flex;
   flex: 1;

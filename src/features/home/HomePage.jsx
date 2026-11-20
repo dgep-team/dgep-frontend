@@ -5,6 +5,7 @@ import heroImage from '../../assets/images/lounge.jpg'
 import { Alert } from '../../components/feedback/Alert.jsx'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
 import { Brand } from '../../components/layout/Brand.jsx'
+import { SaveButton } from '../../components/saved/SaveButton.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { CITY_IMAGES, hotelImage, roomImage } from '../../data/images.js'
 import { useAsync } from '../../hooks/useAsync.js'
@@ -167,6 +168,7 @@ export function HomePage() {
                     <div className={styles.featureMedia}>
                       <img src={roomImage(entry.roomType)} alt={`${entry.roomType.name} at ${entry.hotel.name}`} loading="lazy" />
                       <span className={styles.featureTier}>{entry.tier.label}</span>
+                      <SaveButton kind="room" hotel={entry.hotel} roomType={entry.roomType} className={styles.featureSave} />
                     </div>
                     <div className={styles.featureBody}>
                       <h3 className={styles.featureName}>{entry.roomType.name}</h3>

@@ -1,4 +1,5 @@
 import { BedDouble, MapPin, Maximize2, Users } from 'lucide-react'
+import { SaveButton } from '../../../components/saved/SaveButton.jsx'
 import { Button } from '../../../components/ui/Button.jsx'
 import { roomImage } from '../../../data/images.js'
 import { pluralize } from '../../../lib/dates.js'
@@ -17,6 +18,7 @@ export function RoomResultCard({ entry, selected, onSelect }) {
         <img src={roomImage(roomType)} alt={`${roomType.name} at ${hotel.name}`} loading="lazy" className={styles.image} />
         <span className={`${styles.tierTag} ${styles[`tier_${tier.id}`] ?? ''}`}>{tier.label}</span>
         {selected && <span className={styles.selectedTag}>Your selection</span>}
+        <SaveButton kind="room" hotel={hotel} roomType={roomType} className={styles.saveSlot} />
       </div>
 
       <div className={styles.body}>

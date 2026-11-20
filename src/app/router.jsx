@@ -14,8 +14,9 @@ import { PaymentPage } from '../features/payment/PaymentPage.jsx'
 import { ProfilePage } from '../features/profile/ProfilePage.jsx'
 import { RequestPage } from '../features/requests/RequestPage.jsx'
 import { RequestsPage } from '../features/requests/RequestsPage.jsx'
+import { SavedPage } from '../features/saved/SavedPage.jsx'
 import { SearchPage } from '../features/search/SearchPage.jsx'
-import { NotFoundPage, PlaceholderPage } from '../pages/PlaceholderPage.jsx'
+import { NotFoundPage } from '../pages/PlaceholderPage.jsx'
 
 // Screen -> endpoints (DGEP API v1):
 //   Login / Sign up      POST /auth/login, POST /auth/register
@@ -29,6 +30,7 @@ import { NotFoundPage, PlaceholderPage } from '../pages/PlaceholderPage.jsx'
 //   Service requests     GET /concierge/categories, GET + POST /bookings/:id/requests,
 //                        GET /requests/:id, PATCH /requests/:id/cancel
 //   Profile              GET + PATCH /me, POST /auth/password
+//   Saved                none yet: kept on the device (services/savedService.js)
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
@@ -59,7 +61,8 @@ export const router = createBrowserRouter([
         ],
       },
 
-      { path: 'saved', element: <PlaceholderPage title="Saved" /> },
+      // Open to everyone: saves are kept per device until the guest logs in.
+      { path: 'saved', element: <SavedPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -236,9 +236,17 @@
 }
 
 .selectedTag {
-  right: var(--space-3);
+  top: auto;
+  bottom: var(--space-3);
+  left: var(--space-3);
   background: var(--color-primary);
   color: var(--color-on-primary);
+}
+
+.saveSlot {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
 }
 
 .body {
