@@ -284,3 +284,26 @@
   color: var(--color-primary);
   letter-spacing: 0.04em;
 }
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.linkButton {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.linkButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

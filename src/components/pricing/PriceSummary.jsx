@@ -1,35 +1,51 @@
 import { pluralize } from '../../lib/dates.js'
-import { formatNaira } from '../../lib/money.js'
+import { formatKobo } from '../../lib/money.js'
 import { Card, Divider } from '../ui/Card.jsx'
 import styles from './PriceSummary.module.css'
 
 /**
- * The all-in price breakdown (PRD BR-06). Always fed by buildQuote(), so the
- * total shown here is the exact amount charged at payment.
+ * The all-in price exactly as the API calculated it (the `Price` object):
+ * room, add-ons, each tax, total. The app never recomputes it, so the total
+ * shown is the amount Paystack will charge.
  */
-export function PriceSummary({ quote }) {
-  const basis = `${pluralize(quote.nights, 'night')} × ${pluralize(quote.rooms, 'room')}`
+export function PriceSummary({ price, note }) {
+  if (!price) return null
 
   return (
     <Card aria-label="Price summary">
       <dl className={styles.list}>
         <div className={styles.row}>
           <dt>
-            Subtotal <span className={styles.basis}>({basis})</span>
+            Room{' '}
+            <span className={styles.basis}>
+              ({pluralize(price.nights, 'night')} × {formatKobo(price.pricePerNight)})
+            </span>
           </dt>
-          <dd>{formatNaira(quote.subtotal)}</dd>
+          <dd>{formatKobo(price.roomTotal)}</dd>
         </div>
-        <div className={styles.row}>
-          <dt>Taxes &amp; fees</dt>
-          <dd>{formatNaira(quote.taxesAndFees)}</dd>
-        </div>
+        {price.addOns?.map((addOn) => (
+          <div key={addOn.code} className={styles.row}>
+            <dt>
+              {addOn.name} {addOn.quantity > 1 && <span className={styles.basis}>(× {addOn.quantity})</span>}
+            </dt>
+            <dd>{formatKobo(addOn.amount)}</dd>
+          </div>
+        ))}
+        {price.taxes?.map((tax) => (
+          <div key={tax.name} className={styles.row}>
+            <dt>
+              {tax.name} <span className={styles.basis}>({tax.percent}%)</span>
+            </dt>
+            <dd>{formatKobo(tax.amount)}</dd>
+          </div>
+        ))}
       </dl>
       <Divider />
       <div className={`${styles.row} ${styles.total}`}>
         <span>Total</span>
-        <span>{formatNaira(quote.total)}</span>
+        <span>{formatKobo(price.total)}</span>
       </div>
-      <p className={styles.note}>Includes all taxes and mandatory fees. No charges at the hotel.</p>
+      <p className={styles.note}>{note ?? 'Includes all taxes and mandatory fees. No charges at the hotel.'}</p>
     </Card>
   )
 }

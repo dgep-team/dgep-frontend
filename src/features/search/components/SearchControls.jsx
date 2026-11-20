@@ -20,7 +20,7 @@ export function SearchControls({ query, onQueryChange, tier, onTierChange, sort,
           id={inputId}
           type="search"
           className={styles.searchInput}
-          placeholder="Search rooms, areas or amenities"
+          placeholder="Search by city, room or amenity"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           autoComplete="off"

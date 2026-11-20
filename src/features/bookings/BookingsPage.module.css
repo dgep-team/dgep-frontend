@@ -50,7 +50,8 @@
 }
 
 .statusDone,
-.statusTodo {
+.statusTodo,
+.statusMuted {
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -61,6 +62,10 @@
 
 .statusTodo {
   color: var(--color-primary);
+}
+
+.statusMuted {
+  color: var(--color-text-muted);
 }
 
 .empty {

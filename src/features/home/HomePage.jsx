@@ -2,41 +2,53 @@ import { ArrowRight, CircleUserRound, CreditCard, ReceiptText, Search, Smartphon
 import { useId, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import heroImage from '../../assets/images/lounge.jpg'
-import lagosImage from '../../assets/images/pool.jpg'
-import abujaImage from '../../assets/images/reception.jpg'
+import { Alert } from '../../components/feedback/Alert.jsx'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
 import { Brand } from '../../components/layout/Brand.jsx'
 import { Button } from '../../components/ui/Button.jsx'
+import { CITY_IMAGES, hotelImage, roomImage } from '../../data/images.js'
 import { useAsync } from '../../hooks/useAsync.js'
-import { pluralize } from '../../lib/dates.js'
-import { formatNaira } from '../../lib/money.js'
-import { buildCatalog, cityOf, featuredByTier, summarizeCities } from '../../lib/roomSearch.js'
-import { getRoomCatalog } from '../../services/hotelService.js'
+import { formatDateRange, pluralize } from '../../lib/dates.js'
+import { formatKobo } from '../../lib/money.js'
+import { buildCatalog, featuredByTier, summarizeCities } from '../../lib/roomSearch.js'
+import { errorMessage } from '../../services/api/errors.js'
+import { listBookings } from '../../services/bookingService.js'
+import { listHotels, searchStays } from '../../services/hotelService.js'
+import { useAuth } from '../../state/authContext.js'
+import { useBookingFlow } from '../../state/bookingFlowContext.js'
+import { describeBooking, upcomingBooking } from '../bookings/bookingStatus.js'
 import { useSelectRoom } from '../search/useSelectRoom.js'
 import styles from './HomePage.module.css'
 
-const CITY_IMAGES = { Lagos: lagosImage, Abuja: abujaImage }
-const QUICK_SEARCHES = ['Suite', 'Balcony', 'Budget', 'Breakfast']
+const QUICK_SEARCHES = ['Lagos', 'Abuja', 'King', 'Budget']
 
 const PROMISES = [
-  { icon: ReceiptText, title: 'All-in prices', text: 'Taxes and fees included from the first screen. No surprises at checkout.' },
-  { icon: CreditCard, title: 'Pay your way', text: 'Card, wallet, bank transfer or USSD, with clear help if a payment fails.' },
+  { icon: ReceiptText, title: 'All-in prices', text: 'Taxes included from the first screen. No surprises at checkout.' },
+  { icon: CreditCard, title: 'Pay your way', text: 'Card, bank transfer or USSD through Paystack, with clear help if a payment fails.' },
   { icon: Smartphone, title: 'Check in early', text: 'Share your arrival time before you land and skip the front-desk queue.' },
 ]
 
 const searchUrl = (query) => `/search?q=${encodeURIComponent(query)}`
 
+/** Home: GET /hotels and room availability; GET /bookings for the next stay when logged in. */
 export function HomePage() {
   const navigate = useNavigate()
   const selectRoom = useSelectRoom()
   const searchId = useId()
   const [query, setQuery] = useState('')
-  const catalogRequest = useAsync(getRoomCatalog, 'catalog')
+  const { guest, isLoggedIn } = useAuth()
+  const { draft } = useBookingFlow()
+  const { checkIn, checkOut, guests } = draft
+
+  const hotelsRequest = useAsync((signal) => listHotels({ signal }), 'hotels')
+  const staysRequest = useAsync((signal) => searchStays({ checkIn, checkOut, guests, signal }), `${checkIn}|${checkOut}|${guests}`)
+  const bookingsRequest = useAsync((signal) => listBookings({ signal }), isLoggedIn ? `bookings|${guest?.id}` : null)
 
   const catalog = useMemo(
-    () => (catalogRequest.status === 'success' ? buildCatalog(catalogRequest.data) : []),
-    [catalogRequest.status, catalogRequest.data],
+    () => (staysRequest.status === 'success' ? buildCatalog(staysRequest.data) : []),
+    [staysRequest.status, staysRequest.data],
   )
+  const nextStay = bookingsRequest.status === 'success' ? upcomingBooking(bookingsRequest.data) : null
 
   const submitSearch = (event) => {
     event.preventDefault()
@@ -57,19 +69,17 @@ export function HomePage() {
         <section className={styles.hero} aria-labelledby="home-title">
           <img src={heroImage} alt="" className={styles.heroImage} />
           <div className={styles.heroContent}>
-            <p className={styles.eyebrow}>Lagos · Abuja</p>
+            <p className={styles.eyebrow}>{guest?.firstName ? `Welcome back, ${guest.firstName}` : 'Lagos · Abuja'}</p>
             <h1 id="home-title" className={styles.heroTitle}>
               Your stay, sorted from the first tap.
             </h1>
-            <p className={styles.heroText}>
-              Find the right room, see the full price upfront and check in from your phone.
-            </p>
+            <p className={styles.heroText}>Find the right room, see the full price upfront and check in from your phone.</p>
             <div className={styles.heroActions}>
               <Link to="/search" className={styles.heroPrimary}>
                 Find a room <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <Link to="/bookings" className={styles.heroSecondary}>
-                My bookings
+              <Link to={isLoggedIn ? '/bookings' : '/login'} className={styles.heroSecondary}>
+                {isLoggedIn ? 'My bookings' : 'Log in'}
               </Link>
             </div>
           </div>
@@ -85,7 +95,7 @@ export function HomePage() {
               <input
                 id={searchId}
                 type="search"
-                placeholder="e.g. Lekki, suite, balcony"
+                placeholder="e.g. Lagos, deluxe, king bed"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 enterKeyHint="search"
@@ -105,75 +115,84 @@ export function HomePage() {
           </ul>
         </form>
 
-        {catalogRequest.status === 'loading' && <LoadingView label="Loading stays…" />}
-        {catalogRequest.status === 'error' && <ErrorView message={catalogRequest.error.message} />}
+        {nextStay && <NextStayCard booking={nextStay} />}
 
-        {catalogRequest.status === 'success' && (
-          <>
-            <section className={styles.section} aria-labelledby="cities-heading">
-              <h2 id="cities-heading" className={styles.sectionTitle}>
-                Explore by city
-              </h2>
-              <ul className={styles.cities}>
-                {summarizeCities(catalog).map(({ city, roomCount, fromRate }) => (
-                  <li key={city}>
-                    <Link to={searchUrl(city)} className={styles.cityCard}>
-                      <img src={CITY_IMAGES[city]} alt="" className={styles.cityImage} loading="lazy" />
-                      <span className={styles.cityText}>
-                        <span className={styles.cityName}>{city}</span>
-                        <span className={styles.cityMeta}>
-                          {pluralize(roomCount, 'stay')} · from {formatNaira(fromRate)}
-                        </span>
+        {hotelsRequest.status === 'error' && (
+          <ErrorView message={errorMessage(hotelsRequest.error)} actionLabel="Try again" onAction={hotelsRequest.reload} />
+        )}
+        {hotelsRequest.status === 'success' && hotelsRequest.data.length > 0 && (
+          <section className={styles.section} aria-labelledby="cities-heading">
+            <h2 id="cities-heading" className={styles.sectionTitle}>
+              Explore by city
+            </h2>
+            <ul className={styles.cities}>
+              {summarizeCities(hotelsRequest.data).map(({ city, hotelCount, fromRate }) => (
+                <li key={city}>
+                  <Link to={searchUrl(city)} className={styles.cityCard}>
+                    <img
+                      src={CITY_IMAGES[city] ?? hotelImage(hotelsRequest.data.find((hotel) => hotel.city === city))}
+                      alt=""
+                      className={styles.cityImage}
+                      loading="lazy"
+                    />
+                    <span className={styles.cityText}>
+                      <span className={styles.cityName}>{city}</span>
+                      <span className={styles.cityMeta}>
+                        {pluralize(hotelCount, 'hotel')}
+                        {fromRate !== null && ` · from ${formatKobo(fromRate)}`}
                       </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-            <section className={styles.section} aria-labelledby="featured-heading">
-              <div className={styles.sectionHead}>
-                <h2 id="featured-heading" className={styles.sectionTitle}>
-                  From easy value to pure luxury
-                </h2>
-                <Link to="/search" className={styles.seeAll}>
-                  See all rooms
-                </Link>
-              </div>
-              <ul className={styles.featured}>
-                {featuredByTier(catalog).map((entry) => (
-                  <li key={`${entry.hotel.id}/${entry.room.id}`}>
-                    <article className={styles.featureCard}>
-                      <div className={styles.featureMedia}>
-                        <img src={entry.room.imageUrl} alt={`${entry.room.name} at ${entry.hotel.name}`} loading="lazy" />
-                        <span className={styles.featureTier}>{entry.tier.label}</span>
-                      </div>
-                      <div className={styles.featureBody}>
-                        <h3 className={styles.featureName}>{entry.room.name}</h3>
-                        <p className={styles.featureMeta}>
-                          {entry.hotel.name} · {cityOf(entry.hotel)}
+        {staysRequest.status === 'loading' && <LoadingView label="Loading stays…" />}
+        {staysRequest.status === 'success' && catalog.length > 0 && (
+          <section className={styles.section} aria-labelledby="featured-heading">
+            <div className={styles.sectionHead}>
+              <h2 id="featured-heading" className={styles.sectionTitle}>
+                From easy value to pure luxury
+              </h2>
+              <Link to="/search" className={styles.seeAll}>
+                See all rooms
+              </Link>
+            </div>
+            <ul className={styles.featured}>
+              {featuredByTier(catalog).map((entry) => (
+                <li key={entry.roomType.id}>
+                  <article className={styles.featureCard}>
+                    <div className={styles.featureMedia}>
+                      <img src={roomImage(entry.roomType)} alt={`${entry.roomType.name} at ${entry.hotel.name}`} loading="lazy" />
+                      <span className={styles.featureTier}>{entry.tier.label}</span>
+                    </div>
+                    <div className={styles.featureBody}>
+                      <h3 className={styles.featureName}>{entry.roomType.name}</h3>
+                      <p className={styles.featureMeta}>
+                        {entry.hotel.name} · {entry.hotel.city}
+                      </p>
+                      <div className={styles.featureFoot}>
+                        <p>
+                          <strong>{formatKobo(entry.roomType.pricePerNight)}</strong>
+                          <span className={styles.perNight}> / night</span>
                         </p>
-                        <div className={styles.featureFoot}>
-                          <p>
-                            <strong>{formatNaira(entry.room.nightlyRate)}</strong>
-                            <span className={styles.perNight}> / night</span>
-                          </p>
-                          <button
-                            type="button"
-                            className={styles.featureAction}
-                            onClick={() => selectRoom(entry)}
-                            aria-label={`Book ${entry.room.name} at ${entry.hotel.name}`}
-                          >
-                            Book <ArrowRight size={16} aria-hidden="true" />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className={styles.featureAction}
+                          onClick={() => selectRoom(entry)}
+                          aria-label={`Book ${entry.roomType.name} at ${entry.hotel.name}`}
+                        >
+                          Book <ArrowRight size={16} aria-hidden="true" />
+                        </button>
                       </div>
-                    </article>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <section className={styles.promises} aria-labelledby="promises-heading">
@@ -194,5 +213,23 @@ export function HomePage() {
         </section>
       </main>
     </div>
+  )
+}
+
+function NextStayCard({ booking }) {
+  const { hotel, roomType } = booking.room ?? {}
+  const status = describeBooking(booking)
+  return (
+    <Alert
+      tone="info"
+      title={`Your next stay: ${hotel?.name ?? 'your hotel'}`}
+      actions={
+        <Button variant="secondary" to={`/bookings/${booking.id}`}>
+          View booking
+        </Button>
+      }
+    >
+      {roomType?.name} · {formatDateRange(booking.checkIn, booking.checkOut)} · {status.label}
+    </Alert>
   )
 }

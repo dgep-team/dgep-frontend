@@ -6,7 +6,7 @@ import { CalendarCheck, Heart, House, Search, User } from 'lucide-react'
 export const NAV_ITEMS = [
   { to: '/home', label: 'Home', icon: House, match: ['/home'] },
   { to: '/search', label: 'Search', icon: Search, match: ['/search'] },
-  { to: '/bookings', label: 'Bookings', icon: CalendarCheck, match: ['/booking', '/bookings'] },
+  { to: '/bookings', label: 'Bookings', icon: CalendarCheck, match: ['/booking', '/bookings', '/requests', '/payments'] },
   { to: '/saved', label: 'Saved', icon: Heart, match: ['/saved'] },
   { to: '/profile', label: 'Profile', icon: User, match: ['/profile'] },
 ]

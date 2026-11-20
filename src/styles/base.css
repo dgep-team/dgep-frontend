@@ -75,3 +75,10 @@ a {
     display: none !important;
   }
 }
+
+/* Shown only below the two-column desktop layout (< 1024px). */
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

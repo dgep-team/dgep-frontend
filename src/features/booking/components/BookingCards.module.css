@@ -253,3 +253,47 @@
     height: 96px;
   }
 }
+
+/* Add-ons */
+.addOns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.addOns legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+.addOn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-target);
+  cursor: pointer;
+}
+
+.addOn input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+/* Guest details (booking without an account) */
+.guestForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.guestRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--space-3);
+}

@@ -1,11 +1,12 @@
 import { ChevronRight } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Card } from '../../../components/ui/Card.jsx'
-import { formatNaira } from '../../../lib/money.js'
+import { roomImage } from '../../../data/images.js'
+import { formatKobo } from '../../../lib/money.js'
 import styles from './BookingCards.module.css'
 
-/** The chosen room. Tapping it reveals the room facts from BR-05. */
-export function RoomSelectedCard({ room }) {
+/** The chosen room type. Tapping it reveals the room facts. Missing facts are left out. */
+export function RoomSelectedCard({ roomType }) {
   const [open, setOpen] = useState(false)
   const detailsId = useId()
 
@@ -18,31 +19,27 @@ export function RoomSelectedCard({ room }) {
         aria-controls={detailsId}
         onClick={() => setOpen((value) => !value)}
       >
-        <img className={styles.roomImage} src={room.imageUrl} alt="" />
+        <img className={styles.roomImage} src={roomImage(roomType)} alt="" />
         <span className={styles.grow}>
-          <span className={styles.roomName}>{room.name}</span>
+          <span className={styles.roomName}>{roomType.name}</span>
           <span className={styles.roomPrice}>
-            <strong>{formatNaira(room.nightlyRate)}</strong> <span className={styles.muted}>/ night</span>
+            <strong>{formatKobo(roomType.pricePerNight)}</strong> <span className={styles.muted}>/ night</span>
           </span>
         </span>
-        <ChevronRight
-          size={22}
-          className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
-          aria-hidden="true"
-        />
+        <ChevronRight size={22} className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} aria-hidden="true" />
         <span className="visually-hidden">{open ? 'Hide room details' : 'Show room details'}</span>
       </button>
 
       {open && (
         <dl id={detailsId} className={styles.roomFacts}>
-          <Fact term="Bed" value={room.bedType} />
-          <Fact term="Occupancy" value={`Up to ${room.maxGuestsPerRoom} guests`} />
-          <Fact term="Size" value={`${room.sizeSqm} m²`} />
-          <Fact term="View" value={room.view} />
-          <Fact term="Bathroom" value={room.bathroom} />
-          <Fact term="Amenities" value={room.amenities.join(', ')} />
-          <Fact term="Accessibility" value={room.accessibility} />
-          <Fact term="Cancellation" value={room.cancellationPolicy} />
+          {roomType.description && <Fact term="About" value={roomType.description} />}
+          <Fact term="Bed" value={roomType.bedType} />
+          <Fact term="Occupancy" value={`Up to ${roomType.maxGuests} guests`} />
+          <Fact term="Size" value={roomType.sizeSqm && `${roomType.sizeSqm} m²`} />
+          <Fact term="View" value={roomType.view} />
+          <Fact term="Amenities" value={roomType.amenities?.join(', ')} />
+          <Fact term="Accessibility" value={roomType.accessibility?.join(', ')} />
+          <Fact term="Cancellation" value={roomType.cancellationPolicy} />
         </dl>
       )}
     </Card>
@@ -50,6 +47,7 @@ export function RoomSelectedCard({ room }) {
 }
 
 function Fact({ term, value }) {
+  if (!value) return null
   return (
     <div className={styles.fact}>
       <dt>{term}</dt>

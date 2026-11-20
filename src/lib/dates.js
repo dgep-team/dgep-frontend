@@ -4,8 +4,37 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 export function parseIsoDate(iso) {
-  const [year, month, day] = iso.split('-').map(Number)
+  const [year, month, day] = stayDate(iso).split('-').map(Number)
   return new Date(year, month - 1, day)
+}
+
+/**
+ * The API returns stay dates as "2026-12-01T00:00:00.000Z": only the date part
+ * means anything. Slice it rather than parsing, which would shift the day in
+ * time zones west of UTC.
+ */
+export function stayDate(value) {
+  return String(value ?? '').slice(0, 10)
+}
+
+const timestamp = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+})
+
+/** An ISO 8601 instant ("2026-11-20T16:16:05Z") -> "Nov 20, 5:16 PM" in local time. */
+export function formatTimestamp(iso) {
+  return iso ? timestamp.format(new Date(iso)) : ''
+}
+
+/** "14:30" -> "2:30 PM" */
+export function formatClock(hhmm) {
+  const [h, m] = String(hhmm).split(':').map(Number)
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${suffix}`
 }
 
 const longDate = new Intl.DateTimeFormat('en-US', {

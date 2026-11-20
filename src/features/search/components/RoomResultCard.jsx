@@ -1,68 +1,73 @@
-import { BedDouble, MapPin, Maximize2, Star, Users } from 'lucide-react'
+import { BedDouble, MapPin, Maximize2, Users } from 'lucide-react'
 import { Button } from '../../../components/ui/Button.jsx'
+import { roomImage } from '../../../data/images.js'
 import { pluralize } from '../../../lib/dates.js'
-import { formatNaira } from '../../../lib/money.js'
-import { buildQuote } from '../../../lib/pricing.js'
+import { formatKobo } from '../../../lib/money.js'
 import styles from './Search.module.css'
 
-/** One room in the results. Shows the all-in total for the current dates (BR-02, BR-06). */
-export function RoomResultCard({ entry, stay, selected, onSelect }) {
-  const { hotel, room, tier } = entry
-  const quote = buildQuote({ room, checkIn: stay.checkIn, checkOut: stay.checkOut, rooms: 1 })
+/** One room type in the results, with the server's all-in total for the dates (taxes included). */
+export function RoomResultCard({ entry, selected, onSelect }) {
+  const { hotel, roomType, tier } = entry
+  const headingId = `room-${roomType.id}`
+  const { price } = roomType
 
   return (
-    <article className={`${styles.card} ${selected ? styles.cardSelected : ''}`} aria-labelledby={`room-${hotel.id}-${room.id}`}>
+    <article className={`${styles.card} ${selected ? styles.cardSelected : ''}`} aria-labelledby={headingId}>
       <div className={styles.media}>
-        <img src={room.imageUrl} alt={`${room.name} at ${hotel.name}`} loading="lazy" className={styles.image} />
-        <span className={`${styles.tierTag} ${styles[`tier_${tier.id}`]}`}>{tier.label}</span>
+        <img src={roomImage(roomType)} alt={`${roomType.name} at ${hotel.name}`} loading="lazy" className={styles.image} />
+        <span className={`${styles.tierTag} ${styles[`tier_${tier.id}`] ?? ''}`}>{tier.label}</span>
         {selected && <span className={styles.selectedTag}>Your selection</span>}
       </div>
 
       <div className={styles.body}>
         <div className={styles.titleRow}>
-          <h2 id={`room-${hotel.id}-${room.id}`} className={styles.roomName}>
-            {room.name}
+          <h2 id={headingId} className={styles.roomName}>
+            {roomType.name}
           </h2>
-          <span className={styles.rating}>
-            <Star size={14} className={styles.star} aria-hidden="true" />
-            {hotel.rating}
-            <span className="visually-hidden"> out of 5</span>
-          </span>
+          {roomType.availableRooms <= 2 && (
+            <span className={styles.scarce}>{pluralize(roomType.availableRooms, 'room')} left</span>
+          )}
         </div>
         <p className={styles.hotelLine}>
           <MapPin size={14} aria-hidden="true" />
-          {hotel.name} · {hotel.location}
+          {hotel.name} · {hotel.city}
         </p>
-        <p className={styles.description}>{room.description}</p>
+        {roomType.description && <p className={styles.description}>{roomType.description}</p>}
 
         <ul className={styles.facts}>
-          <li>
-            <BedDouble size={16} aria-hidden="true" />
-            {room.bedType}
-          </li>
-          <li>
-            <Maximize2 size={16} aria-hidden="true" />
-            {room.sizeSqm} m²
-          </li>
+          {roomType.bedType && (
+            <li>
+              <BedDouble size={16} aria-hidden="true" />
+              {roomType.bedType}
+            </li>
+          )}
+          {roomType.sizeSqm && (
+            <li>
+              <Maximize2 size={16} aria-hidden="true" />
+              {roomType.sizeSqm} m²
+            </li>
+          )}
           <li>
             <Users size={16} aria-hidden="true" />
-            Up to {room.maxGuestsPerRoom}
+            Up to {roomType.maxGuests}
           </li>
         </ul>
 
         <div className={styles.priceRow}>
           <div>
             <p className={styles.rate}>
-              <strong>{formatNaira(room.nightlyRate)}</strong> <span className={styles.muted}>/ night</span>
+              <strong>{formatKobo(roomType.pricePerNight)}</strong> <span className={styles.muted}>/ night</span>
             </p>
-            <p className={styles.allIn}>
-              {formatNaira(quote.total)} total · {pluralize(quote.nights, 'night')}, incl. taxes &amp; fees
-            </p>
+            {price && (
+              <p className={styles.allIn}>
+                {formatKobo(price.total)} total · {pluralize(price.nights, 'night')}, incl. taxes
+              </p>
+            )}
           </div>
           <Button
             variant={selected ? 'secondary' : 'primary'}
             onClick={() => onSelect(entry)}
-            aria-label={`Select ${room.name} at ${hotel.name}`}
+            aria-label={`Select ${roomType.name} at ${hotel.name}`}
           >
             {selected ? 'Continue' : 'Select'}
           </Button>

@@ -262,13 +262,11 @@
   line-height: 1.25;
 }
 
-.rating {
-  display: inline-flex;
+.scarce {
   flex-shrink: 0;
-  align-items: center;
-  gap: 2px;
   font-size: var(--text-sm);
   font-weight: 600;
+  color: var(--color-warning);
 }
 
 .star {

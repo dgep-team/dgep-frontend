@@ -5,19 +5,23 @@ import { addDays, adjustStay, formatDate, MAX_STAY_NIGHTS, pluralize, toIsoDate 
 import { DateField } from './DateField.jsx'
 import styles from './BookingCards.module.css'
 
+// The API accepts 1 to 10 guests per booking.
+const API_MAX_GUESTS = 10
+
 /**
- * Dates and party size. Tapping a date or "Edit" opens one editor for both,
- * so the price summary updates as the guest adjusts the stay.
+ * Dates and party size. Tapping a date or "Edit" opens one editor for both.
+ * `maxGuests` is the selected room type's capacity (omit on search).
  */
-export function StayDetailsCard({ draft, room, onChange }) {
+export function StayDetailsCard({ draft, maxGuests = API_MAX_GUESTS, onChange, disabled = false }) {
   const [editing, setEditing] = useState(false)
   const editorId = useId()
   const checkInRef = useRef(null)
   const checkOutRef = useRef(null)
   const today = toIsoDate(new Date())
-  const maxGuests = draft.rooms * room.maxGuestsPerRoom
+  const guestLimit = Math.min(maxGuests, API_MAX_GUESTS)
 
   const openEditor = (focusField) => {
+    if (disabled) return
     setEditing(true)
     const target = focusField === 'checkIn' ? checkInRef : focusField === 'checkOut' ? checkOutRef : null
     if (target) requestAnimationFrame(() => target.current?.focus())
@@ -25,44 +29,25 @@ export function StayDetailsCard({ draft, room, onChange }) {
 
   const changeDate = (field) => (iso) => onChange(adjustStay(draft, { [field]: iso }, today))
 
-  const setRooms = (rooms) => {
-    // Keep the party valid: at least one guest per room, and within capacity.
-    const guests = Math.min(Math.max(draft.guests, rooms), rooms * room.maxGuestsPerRoom)
-    onChange({ rooms, guests })
-  }
-
   return (
     <Card aria-label="Stay details">
       <div className={styles.dates}>
-        <DateItem
-          label="Check-in"
-          iso={draft.checkIn}
-          onClick={() => openEditor('checkIn')}
-          controls={editorId}
-          expanded={editing}
-        />
-        <DateItem
-          label="Check-out"
-          iso={draft.checkOut}
-          onClick={() => openEditor('checkOut')}
-          controls={editorId}
-          expanded={editing}
-        />
+        <DateItem label="Check-in" iso={draft.checkIn} onClick={() => openEditor('checkIn')} controls={editorId} expanded={editing} />
+        <DateItem label="Check-out" iso={draft.checkOut} onClick={() => openEditor('checkOut')} controls={editorId} expanded={editing} />
       </div>
       <Divider />
       <div className={styles.guestsRow}>
         <Users size={22} className={styles.rowIcon} aria-hidden="true" />
         <div className={styles.grow}>
           <p className={styles.label}>Guests</p>
-          <p className={styles.value}>
-            {pluralize(draft.rooms, 'Room')}, {pluralize(draft.guests, 'Guest')}
-          </p>
+          <p className={styles.value}>{pluralize(draft.guests, 'Guest')}</p>
         </div>
         <button
           type="button"
           className={styles.linkButton}
           aria-expanded={editing}
           aria-controls={editorId}
+          disabled={disabled}
           onClick={() => (editing ? setEditing(false) : openEditor())}
         >
           {editing ? 'Done' : 'Edit'}
@@ -72,13 +57,7 @@ export function StayDetailsCard({ draft, room, onChange }) {
       {editing && (
         <div id={editorId} className={styles.editor}>
           <div className={styles.dateInputs}>
-            <DateField
-              inputRef={checkInRef}
-              label="Check-in"
-              min={today}
-              value={draft.checkIn}
-              onCommit={changeDate('checkIn')}
-            />
+            <DateField inputRef={checkInRef} label="Check-in" min={today} value={draft.checkIn} onCommit={changeDate('checkIn')} />
             <DateField
               inputRef={checkOutRef}
               label="Check-out"
@@ -89,13 +68,12 @@ export function StayDetailsCard({ draft, room, onChange }) {
               hint={`Stays of up to ${MAX_STAY_NIGHTS} nights.`}
             />
           </div>
-          <Stepper label="Rooms" value={draft.rooms} min={1} max={room.maxRooms} onChange={setRooms} />
           <Stepper
             label="Guests"
-            hint={`Up to ${room.maxGuestsPerRoom} per room`}
+            hint={maxGuests < API_MAX_GUESTS ? `Up to ${maxGuests} in this room` : undefined}
             value={draft.guests}
-            min={draft.rooms}
-            max={maxGuests}
+            min={1}
+            max={guestLimit}
             onChange={(guests) => onChange({ guests })}
           />
         </div>
@@ -106,13 +84,7 @@ export function StayDetailsCard({ draft, room, onChange }) {
 
 function DateItem({ label, iso, onClick, controls, expanded }) {
   return (
-    <button
-      type="button"
-      className={styles.dateItem}
-      onClick={onClick}
-      aria-controls={controls}
-      aria-expanded={expanded}
-    >
+    <button type="button" className={styles.dateItem} onClick={onClick} aria-controls={controls} aria-expanded={expanded}>
       <CalendarDays size={22} className={styles.rowIcon} aria-hidden="true" />
       <span>
         <span className={styles.label}>{label}</span>
