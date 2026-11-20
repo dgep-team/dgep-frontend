@@ -1,0 +1,212 @@
+.muted {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.sectionTitle {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+/* Booking summary */
+.summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.summaryImage {
+  width: 64px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.summaryText {
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryName {
+  font-weight: 600;
+}
+
+.summaryTotal {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+/* Method list */
+.methods,
+.cardForm {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.methods {
+  gap: 0;
+  overflow: hidden;
+}
+
+.method {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.method + .method {
+  margin-top: -1px;
+}
+
+.methods legend + .method {
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.method:last-of-type {
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+.method:has(:checked) {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface-accent);
+  border-color: var(--color-primary);
+}
+
+.method:has(:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.radio {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+.radio:focus-visible {
+  outline: none;
+}
+
+.methodIcon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.methodText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.methodLabel {
+  font-weight: 600;
+}
+
+.methodDescription {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.cardBadges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.visa {
+  font-weight: 900;
+  font-style: italic;
+  color: var(--brand-blue-900);
+  letter-spacing: 0.02em;
+}
+
+.mastercard {
+  display: flex;
+}
+
+.mastercard span {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #eb001b;
+}
+
+.mastercard span + span {
+  margin-left: -8px;
+  background: #f79e1b;
+  mix-blend-mode: multiply;
+}
+
+.textBadge {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* Card form */
+.cardForm {
+  gap: var(--space-3);
+}
+
+.cardForm .sectionTitle {
+  margin-bottom: 0;
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-target);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+/* Page */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: calc(var(--space-2) * -1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

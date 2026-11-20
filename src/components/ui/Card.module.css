@@ -1,0 +1,27 @@
+.card {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.default {
+  background: var(--color-surface);
+}
+
+.muted {
+  background: var(--color-surface-muted);
+  box-shadow: none;
+}
+
+.accent {
+  background: var(--color-surface-accent);
+  border-color: var(--color-primary-soft);
+  box-shadow: none;
+}
+
+.divider {
+  margin: var(--space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
