@@ -1,5 +1,5 @@
 import { Check, Copy, Download, MapPin } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { Alert } from '../../components/feedback/Alert.jsx'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
@@ -16,6 +16,7 @@ import { errorMessage } from '../../services/api/errors.js'
 import { getArrivalInfo } from '../../services/bookingService.js'
 import { getHotel } from '../../services/hotelService.js'
 import { useAuth } from '../../state/authContext.js'
+import { useBookingFlow } from '../../state/bookingFlowContext.js'
 import { CheckInHero } from '../checkin/components/CheckInHero.jsx'
 import { canCheckInOnline, isPaid } from '../bookings/bookingStatus.js'
 import { loadPayableBooking } from './loadPayableBooking.js'
@@ -37,6 +38,14 @@ export function PaymentSuccessPage() {
     return { ...data, arrival }
   }, bookingId)
   const header = <ScreenHeader title="Confirmation" backTo="/bookings" />
+
+  // This booking is paid: the next booking starts fresh (also when the guest
+  // got here without passing through the payment callback).
+  const { draft, resetDraft } = useBookingFlow()
+  const paidId = booking.status === 'success' && isPaid(booking.data) ? booking.data.id : null
+  useEffect(() => {
+    if (paidId && draft.pending?.bookingId === paidId) resetDraft()
+  }, [paidId, draft.pending?.bookingId, resetDraft])
 
   if (booking.status === 'loading') {
     return <Screen header={header} width="narrow"><LoadingView label="Loading your booking…" /></Screen>
