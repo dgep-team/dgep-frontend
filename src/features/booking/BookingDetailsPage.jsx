@@ -9,6 +9,7 @@ import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { PriceSummary } from '../../components/pricing/PriceSummary.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
+import { priceWithAddOns } from '../../lib/pricing.js'
 import { loginUrl } from '../../lib/redirect.js'
 import { ERROR_CODES, errorMessage, fieldErrors } from '../../services/api/errors.js'
 import { cancelBooking, createBooking } from '../../services/bookingService.js'
@@ -79,6 +80,9 @@ export function BookingDetailsPage() {
   const isAvailable = Boolean(roomType && roomType.availableRooms > 0)
   const isSubmitting = submit.status === 'submitting'
   const validAddOns = draft.addOns.filter((code) => hotel.addOns?.some((addOn) => addOn.code === code))
+  // Ticked extras (and the tax on them) show in the total straight away.
+  // The server confirms the exact amount when the booking is created.
+  const price = isAvailable ? priceWithAddOns(roomType.price, hotel.addOns, validAddOns, { guests }) : null
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -131,12 +135,8 @@ export function BookingDetailsPage() {
             <>
               {isAvailable && (
                 <PriceSummary
-                  price={roomType.price}
-                  note={
-                    validAddOns.length > 0
-                      ? 'Extras and their taxes are added to this total on the next step, before you pay.'
-                      : undefined
-                  }
+                  price={price}
+                  note={validAddOns.length > 0 ? 'Includes your extras and all taxes. No charges at the hotel.' : undefined}
                 />
               )}
               {submit.status === 'error' && <SubmitError error={submit.error} />}

@@ -1,6 +1,6 @@
 import { Car, Clock, MapPin, Phone, Signpost } from 'lucide-react'
 import { useState } from 'react'
-import { useLocation, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { Alert } from '../../components/feedback/Alert.jsx'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
 import { Screen, SplitLayout } from '../../components/layout/AppShell.jsx'
@@ -13,14 +13,12 @@ import { formatKobo } from '../../lib/money.js'
 import { ERROR_CODES, errorMessage } from '../../services/api/errors.js'
 import { BOOKING_STATUS, cancelBooking, getArrivalInfo } from '../../services/bookingService.js'
 import { loadPayableBooking } from '../payment/loadPayableBooking.js'
-import { CheckInHero } from '../checkin/components/CheckInHero.jsx'
 import { canCancel, canCheckInOnline, canMakeRequests, describeBooking, isPaid } from './bookingStatus.js'
 import styles from './BookingPage.module.css'
 
-/** One booking (and the Booking Success screen after payment): GET /bookings/:id + /arrival. */
+/** One booking: GET /bookings/:id + /arrival. (After payment, guests land on PaymentSuccessPage first.) */
 export function BookingPage() {
   const { bookingId } = useParams()
-  const { state } = useLocation()
 
   const booking = useAsync(async (signal) => {
     const data = await loadPayableBooking(bookingId, signal)
@@ -60,9 +58,6 @@ export function BookingPage() {
 
   return (
     <Screen header={header}>
-      {state?.justPaid && data.status === BOOKING_STATUS.confirmed && (
-        <CheckInHero title="Booking confirmed!" subtitle={`Payment received. We’ve saved your stay at ${hotel?.name}.`} />
-      )}
       {cancel.status === 'done' && <Alert tone="success" title="Your booking is cancelled" />}
 
       <SplitLayout

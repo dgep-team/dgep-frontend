@@ -93,7 +93,7 @@ export function PaymentCallbackPage() {
           </Screen>
         )
       }
-      return <Navigate to={`/bookings/${booking.id}`} replace state={{ justPaid: true }} />
+      return <Navigate to={`/bookings/${booking.id}/confirmed`} replace />
 
     case VERIFY_STATUS.failed:
       return (

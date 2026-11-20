@@ -11,6 +11,7 @@ import { CheckInPage } from '../features/checkin/CheckInPage.jsx'
 import { HomePage } from '../features/home/HomePage.jsx'
 import { PaymentCallbackPage } from '../features/payment/PaymentCallbackPage.jsx'
 import { PaymentPage } from '../features/payment/PaymentPage.jsx'
+import { PaymentSuccessPage } from '../features/payment/PaymentSuccessPage.jsx'
 import { ProfilePage } from '../features/profile/ProfilePage.jsx'
 import { RequestPage } from '../features/requests/RequestPage.jsx'
 import { RequestsPage } from '../features/requests/RequestsPage.jsx'
@@ -25,6 +26,7 @@ import { NotFoundPage } from '../pages/PlaceholderPage.jsx'
 //   Booking details      GET /hotels/:id, POST /bookings
 //   Payment              GET /bookings/:id, POST /bookings/:id/payments
 //   Payment callback     GET /payments/verify/:reference
+//   Payment success      GET /bookings/:id
 //   Booking (success)    GET /bookings/:id, GET /bookings/:id/arrival, PATCH /bookings/:id/cancel
 //   Pre-check-in         GET + POST /bookings/:id/check-in
 //   Service requests     GET /concierge/categories, GET + POST /bookings/:id/requests,
@@ -52,6 +54,8 @@ export const router = createBrowserRouter([
           { path: 'bookings', element: <BookingsPage /> },
           { path: 'bookings/:bookingId', element: <BookingPage /> },
           { path: 'bookings/:bookingId/pay', element: <PaymentPage /> },
+          // Where a verified payment lands: confirmation + booking details.
+          { path: 'bookings/:bookingId/confirmed', element: <PaymentSuccessPage /> },
           { path: 'bookings/:bookingId/check-in', element: <CheckInPage /> },
           { path: 'bookings/:bookingId/requests', element: <RequestsPage /> },
           { path: 'requests/:requestId', element: <RequestPage /> },
