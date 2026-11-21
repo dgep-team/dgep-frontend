@@ -1,0 +1,185 @@
+.greeting {
+  color: var(--color-text-muted);
+}
+
+/* Stat tiles */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.statIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.statLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.statValue {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Weekly bookings chart */
+.chartCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.chartHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.chartTitle {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.chartMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.chartBody {
+  position: relative;
+}
+
+.chartSvg {
+  display: block;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.baseline {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+
+.axisLabel {
+  fill: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.axisActive {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.area {
+  fill: var(--color-primary);
+  opacity: 0.1;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dot {
+  fill: var(--color-primary);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+.crosshair {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.hit {
+  fill: transparent;
+  cursor: default;
+  outline: none;
+}
+
+.hit:focus-visible {
+  stroke: var(--color-focus);
+  stroke-width: 2;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: 0 4px 12px rgba(20, 27, 45, 0.12);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.tooltip[data-edge='start'] {
+  transform: translate(-12px, calc(-100% - 12px));
+}
+
+.tooltip[data-edge='end'] {
+  transform: translate(calc(-100% + 12px), calc(-100% - 12px));
+}
+
+.tooltipDay {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.tooltipValue {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}

@@ -1,15 +1,20 @@
+import { KeyRound } from 'lucide-react'
 import { Button } from '../../../components/ui/Button.jsx'
 import { Card } from '../../../components/ui/Card.jsx'
 import { formatClock, formatDateRange } from '../../../lib/dates.js'
+import { getIdDocument, idTypeLabel } from '../../../services/mock/idDocumentService.js'
 import { CheckInHero } from './CheckInHero.jsx'
+import { CheckInQr } from './CheckInQr.jsx'
 import styles from './CheckIn.module.css'
 
 export function CheckInComplete({ booking, arrival }) {
   const hotel = booking.room?.hotel
+  const idDocument = getIdDocument(booking.id)
 
   return (
     <>
-      <CheckInHero title="You’re checked in!" subtitle="Give your booking reference at the front desk to collect your room key." />
+      <CheckInHero title="You’re checked in!" subtitle="Show your QR code at the front desk to collect your room key." />
+      <CheckInQr bookingId={booking.id} />
       <Card aria-label="Check-in summary">
         <dl className={styles.summaryList}>
           <div>
@@ -42,13 +47,22 @@ export function CheckInComplete({ booking, arrival }) {
           )}
           <div>
             <dt>ID</dt>
-            <dd>Show a valid government ID at the front desk</dd>
+            <dd>
+              {idDocument
+                ? `${idTypeLabel(idDocument.idType)} added. Bring the original with you.`
+                : 'Show a valid government ID at the front desk'}
+            </dd>
           </div>
         </dl>
       </Card>
-      <Button fullWidth to={`/bookings/${booking.id}`}>
-        View booking
-      </Button>
+      <div className={styles.completeActions}>
+        <Button fullWidth to={`/bookings/${booking.id}/key`} iconRight={<KeyRound size={18} aria-hidden="true" />}>
+          Your digital key
+        </Button>
+        <Button fullWidth variant="secondary" to={`/bookings/${booking.id}`}>
+          View booking
+        </Button>
+      </div>
     </>
   )
 }

@@ -81,6 +81,11 @@ export function BookingPage() {
                 View check-in
               </Button>
             )}
+            {(data.status === BOOKING_STATUS.checkedIn || (data.onlineCheckInAt && data.status === BOOKING_STATUS.confirmed)) && (
+              <Button fullWidth variant={data.status === BOOKING_STATUS.checkedIn ? 'primary' : 'secondary'} to={`/bookings/${data.id}/key`}>
+                Your digital key
+              </Button>
+            )}
             {data.status !== BOOKING_STATUS.cancelled && (
               <CallReception variant="button" phone={hotel?.phone ?? arrival?.phone} hotelName={hotel?.name} />
             )}
