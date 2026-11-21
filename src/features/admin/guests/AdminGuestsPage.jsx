@@ -9,6 +9,9 @@ import { asList } from '../adminData.js'
 import { AdminScreen } from '../components/AdminShell.jsx'
 import styles from '../components/AdminList.module.css'
 
+/** The API sends each guest's booking count; accept the likely field names. */
+const bookingCount = (guest) => guest.bookingCount ?? guest.bookingsCount ?? guest._count?.bookings ?? null
+
 /** Guests who have booked at this hotel: GET /admin/guests?search=. */
 export function AdminGuestsPage() {
   const [search, setSearch] = useState('')
@@ -43,6 +46,11 @@ export function AdminGuestsPage() {
                   <span className={styles.primary}>{[guest.firstName, guest.lastName].filter(Boolean).join(' ') || 'Guest'}</span>
                   <span className={styles.secondary}>{[guest.email, guest.phone].filter(Boolean).join(' · ')}</span>
                 </span>
+                {bookingCount(guest) !== null && (
+                  <span className={`${styles.pill} ${bookingCount(guest) > 1 ? styles.info : styles.muted}`}>
+                    {bookingCount(guest) === 1 ? '1 booking' : `${bookingCount(guest)} bookings`}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

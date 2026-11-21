@@ -2,7 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
-import { Screen, SplitLayout } from '../../components/layout/AppShell.jsx'
+import { Screen } from '../../components/layout/AppShell.jsx'
 import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
@@ -109,34 +109,27 @@ export function CheckInPage() {
   }
 
   return (
-    <Screen header={header}>
-      <form onSubmit={handleContinue} noValidate>
-        <SplitLayout
-          asideLabel="Continue check-in"
-          aside={
-            <>
-              <Button type="submit" fullWidth iconRight={<ArrowRight size={18} aria-hidden="true" />}>
-                Continue to ID Upload
-              </Button>
-              <p className={styles.frontDesk}>Step 1 of 2. Next, add a photo of your ID.</p>
-            </>
-          }
-        >
-          <StaySummaryCard booking={booking} />
-          <CheckInQr bookingId={booking.id} />
-          <GuestInfoCard
-            guest={guest}
-            editing={editingGuest}
-            edits={edits}
-            onEditsChange={setGuestEdits}
-            onToggleEdit={() => {
-              setEditingGuest((value) => !value)
-              setGuestEdits(null)
-            }}
-            errors={errors}
-          />
-          <ArrivalDetailsFields value={arrival} onChange={setArrival} checkInTime={arrivalInfo?.checkInTime} errors={errors} />
-        </SplitLayout>
+    <Screen header={header} width="narrow">
+      <form className={styles.form} onSubmit={handleContinue} noValidate>
+        <StaySummaryCard booking={booking} />
+        <CheckInQr bookingId={booking.id} />
+        <GuestInfoCard
+          guest={guest}
+          editing={editingGuest}
+          edits={edits}
+          onEditsChange={setGuestEdits}
+          onToggleEdit={() => {
+            setEditingGuest((value) => !value)
+            setGuestEdits(null)
+          }}
+          errors={errors}
+        />
+        <ArrivalDetailsFields value={arrival} onChange={setArrival} checkInTime={arrivalInfo?.checkInTime} errors={errors} />
+        {/* The action sits right after Special requests, at every width. */}
+        <Button type="submit" fullWidth iconRight={<ArrowRight size={18} aria-hidden="true" />}>
+          Continue to ID Upload
+        </Button>
+        <p className={styles.frontDesk}>Step 1 of 2. Next, add a photo of your ID.</p>
       </form>
     </Screen>
   )

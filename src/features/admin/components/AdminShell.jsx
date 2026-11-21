@@ -1,13 +1,18 @@
-import { ChevronLeft, ClipboardList, Ellipsis, House, Users } from 'lucide-react'
+import { ChevronLeft, ClipboardList, ConciergeBell, Ellipsis, House, Users } from 'lucide-react'
 import { NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from 'react-router'
 import { Brand } from '../../../components/layout/Brand.jsx'
+import { useStaffSession } from '../../../state/useStaffSession.js'
+import { can } from '../adminData.js'
 import styles from './AdminShell.module.css'
 
 // Staff destinations. `end` keeps Dashboard from matching every /admin path.
+// `permission` hides a tab from roles that can't use it (housekeeping and
+// maintenance work from Requests). Rooms and Staff live under More.
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', icon: House, end: true },
-  { to: '/admin/bookings', label: 'Bookings', icon: ClipboardList },
-  { to: '/admin/guests', label: 'Guests', icon: Users },
+  { to: '/admin/bookings', label: 'Bookings', icon: ClipboardList, permission: 'frontDesk' },
+  { to: '/admin/requests', label: 'Requests', icon: ConciergeBell },
+  { to: '/admin/guests', label: 'Guests', icon: Users, permission: 'frontDesk' },
   { to: '/admin/more', label: 'More', icon: Ellipsis },
 ]
 
@@ -35,9 +40,10 @@ export function AdminShell() {
 }
 
 function AdminNavList({ className, linkClass }) {
+  const { staff } = useStaffSession()
   return (
     <ul className={className}>
-      {ADMIN_NAV.map(({ to, label, icon: Icon, end }) => (
+      {ADMIN_NAV.filter((item) => !item.permission || can(staff, item.permission)).map(({ to, label, icon: Icon, end }) => (
         <li key={to}>
           <NavLink to={to} end={end} className={({ isActive }) => `${linkClass} ${isActive ? styles.active : ''}`}>
             <Icon size={22} aria-hidden="true" />

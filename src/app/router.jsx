@@ -10,6 +10,10 @@ import { AdminShell } from '../features/admin/components/AdminShell.jsx'
 import { DashboardPage } from '../features/admin/dashboard/DashboardPage.jsx'
 import { AdminGuestsPage } from '../features/admin/guests/AdminGuestsPage.jsx'
 import { AdminMorePage } from '../features/admin/more/AdminMorePage.jsx'
+import { AdminRequestPage } from '../features/admin/requests/AdminRequestPage.jsx'
+import { AdminRequestsPage } from '../features/admin/requests/AdminRequestsPage.jsx'
+import { AdminRoomsPage } from '../features/admin/rooms/AdminRoomsPage.jsx'
+import { AdminStaffPage } from '../features/admin/staff/AdminStaffPage.jsx'
 import { LoginPage } from '../features/auth/LoginPage.jsx'
 import { RegisterPage } from '../features/auth/RegisterPage.jsx'
 import { BookingDetailsPage } from '../features/booking/BookingDetailsPage.jsx'
@@ -48,9 +52,13 @@ import { NotFoundPage } from '../pages/PlaceholderPage.jsx'
 //
 // Hotel staff (/admin, staff token, own shell):
 //   Staff login          POST /admin/auth/login
-//   Dashboard            GET /admin/overview, GET /admin/bookings (7-day chart counted on the device)
+//   Dashboard            GET /admin/overview, /admin/bookings, /admin/guests, /admin/requests
+//                        (analytics worked out on the device: features/admin/analytics.js)
 //   All bookings         GET /admin/bookings; one booking GET /admin/bookings/:id, POST .../check-in
+//   Requests             GET /admin/requests, GET /admin/requests/:id, PATCH .../status, PATCH .../assign
 //   Guests               GET /admin/guests
+//   Rooms                GET /admin/rooms/availability, GET /admin/room-types, POST /admin/rooms
+//   Staff                GET + POST /admin/staff
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
@@ -103,7 +111,11 @@ export const router = createBrowserRouter([
           { index: true, element: <DashboardPage /> },
           { path: 'bookings', element: <AdminBookingsPage /> },
           { path: 'bookings/:bookingId', element: <AdminBookingPage /> },
+          { path: 'requests', element: <AdminRequestsPage /> },
+          { path: 'requests/:requestId', element: <AdminRequestPage /> },
           { path: 'guests', element: <AdminGuestsPage /> },
+          { path: 'rooms', element: <AdminRoomsPage /> },
+          { path: 'staff', element: <AdminStaffPage /> },
           { path: 'more', element: <AdminMorePage /> },
         ],
       },
