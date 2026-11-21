@@ -1,18 +1,19 @@
+import { ArrowRight } from 'lucide-react'
 import { useState } from 'react'
-import { useParams } from 'react-router'
-import { Alert } from '../../components/feedback/Alert.jsx'
+import { useLocation, useNavigate, useParams } from 'react-router'
 import { ErrorView, LoadingView } from '../../components/feedback/StatusView.jsx'
-import { Screen, SplitLayout } from '../../components/layout/AppShell.jsx'
+import { Screen } from '../../components/layout/AppShell.jsx'
 import { ScreenHeader } from '../../components/layout/ScreenHeader.jsx'
 import { Button } from '../../components/ui/Button.jsx'
 import { useAsync } from '../../hooks/useAsync.js'
-import { ERROR_CODES, errorMessage, fieldErrors } from '../../services/api/errors.js'
+import { errorMessage } from '../../services/api/errors.js'
 import { getMe } from '../../services/authService.js'
-import { BOOKING_STATUS, getArrivalInfo, getBooking, getCheckInStatus, submitCheckIn } from '../../services/bookingService.js'
+import { BOOKING_STATUS, getArrivalInfo, getBooking, getCheckInStatus } from '../../services/bookingService.js'
 import { ArrivalDetailsFields } from './components/ArrivalDetailsFields.jsx'
 import { CheckInComplete } from './components/CheckInComplete.jsx'
-import { CheckInHero } from './components/CheckInHero.jsx'
+import { CheckInQr } from './components/CheckInQr.jsx'
 import { GuestInfoCard } from './components/GuestInfoCard.jsx'
+import { StaySummaryCard } from './components/StaySummaryCard.jsx'
 import styles from './components/CheckIn.module.css'
 
 async function loadCheckIn(bookingId, signal) {
@@ -25,16 +26,23 @@ async function loadCheckIn(bookingId, signal) {
   return { booking, status, guest, arrival }
 }
 
-/** Pre-arrival check-in: GET + POST /bookings/:id/check-in. No ID is needed (PC-01, PC-02). */
+/**
+ * Digital check-in, step 1 of 2: stay summary, the check-in QR code and the
+ * arrival details. "Continue to ID Upload" carries the details to step 2
+ * (IdUploadPage), which sends POST /bookings/:id/check-in.
+ */
 export function CheckInPage() {
   const { bookingId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const page = useAsync((signal) => loadCheckIn(bookingId, signal), bookingId)
 
-  const [arrival, setArrival] = useState({ arrivalTime: '', specialRequests: '' })
-  const [editingGuest, setEditingGuest] = useState(false)
-  const [guestEdits, setGuestEdits] = useState(null)
+  // Coming back from the ID step keeps what the guest already entered.
+  const returning = location.state?.checkIn
+  const [arrival, setArrival] = useState(returning?.arrival ?? { arrivalTime: '', specialRequests: '' })
+  const [editingGuest, setEditingGuest] = useState(Boolean(returning?.guest))
+  const [guestEdits, setGuestEdits] = useState(returning?.guestEdits ?? null)
   const [errors, setErrors] = useState({})
-  const [submit, setSubmit] = useState({ status: 'idle' })
 
   const header = <ScreenHeader title="Digital Check-in" backTo={`/bookings/${bookingId}`} />
 
@@ -75,7 +83,6 @@ export function CheckInPage() {
     )
   }
 
-  const isSubmitting = submit.status === 'submitting'
   const edits = guestEdits ?? { firstName: guest.firstName ?? '', lastName: guest.lastName ?? '', phone: guest.phone ?? '' }
 
   const changedGuestFields = () => {
@@ -88,7 +95,7 @@ export function CheckInPage() {
     return changes
   }
 
-  const handleSubmit = async (event) => {
+  const handleContinue = (event) => {
     event.preventDefault()
     if (!arrival.arrivalTime) {
       setErrors({ arrivalTime: 'Choose when you expect to arrive.' })
@@ -96,67 +103,33 @@ export function CheckInPage() {
       return
     }
     setErrors({})
-    setSubmit({ status: 'submitting' })
-    try {
-      await submitCheckIn(bookingId, { ...arrival, guest: changedGuestFields() })
-      setSubmit({ status: 'idle' })
-      page.reload()
-      window.scrollTo({ top: 0 })
-    } catch (error) {
-      setErrors(fieldErrors(error))
-      setSubmit({ status: 'error', error })
-    }
+    navigate(`/bookings/${bookingId}/check-in/id`, {
+      state: { checkIn: { arrival, guest: changedGuestFields(), guestEdits: editingGuest ? edits : null } },
+    })
   }
 
-  const submitError = submit.status === 'error' ? submit.error : null
-
   return (
-    <Screen header={header}>
-      <CheckInHero title="Check-in Ready!" subtitle="Complete your check-in before arrival for a faster experience." />
-
-      <form onSubmit={handleSubmit} noValidate>
-        <SplitLayout
-          asideLabel="Submit check-in"
-          aside={
-            <>
-              {submitError && (
-                <Alert tone="error" title="We couldn’t complete your check-in">
-                  {submitError.code === ERROR_CODES.BOOKING_NOT_PAID
-                    ? 'Your booking isn’t paid yet.'
-                    : submitError.code === ERROR_CODES.BOOKING_CLOSED
-                      ? 'This booking is cancelled or the stay has ended.'
-                      : `${errorMessage(submitError)} Your details are still here; please try again.`}
-                </Alert>
-              )}
-              <Button type="submit" fullWidth loading={isSubmitting} loadingLabel="Submitting…">
-                Submit &amp; Complete Check-in
-              </Button>
-              <p className={styles.frontDesk}>
-                No ID upload needed. Bring a valid government ID to the front desk, or check in there in person if you prefer.
-              </p>
-            </>
-          }
-        >
-          <GuestInfoCard
-            guest={guest}
-            editing={editingGuest}
-            edits={edits}
-            onEditsChange={setGuestEdits}
-            onToggleEdit={() => {
-              setEditingGuest((value) => !value)
-              setGuestEdits(null)
-            }}
-            errors={errors}
-            disabled={isSubmitting}
-          />
-          <ArrivalDetailsFields
-            value={arrival}
-            onChange={setArrival}
-            checkInTime={arrivalInfo?.checkInTime}
-            errors={errors}
-            disabled={isSubmitting}
-          />
-        </SplitLayout>
+    <Screen header={header} width="narrow">
+      <form className={styles.form} onSubmit={handleContinue} noValidate>
+        <StaySummaryCard booking={booking} />
+        <CheckInQr bookingId={booking.id} />
+        <GuestInfoCard
+          guest={guest}
+          editing={editingGuest}
+          edits={edits}
+          onEditsChange={setGuestEdits}
+          onToggleEdit={() => {
+            setEditingGuest((value) => !value)
+            setGuestEdits(null)
+          }}
+          errors={errors}
+        />
+        <ArrivalDetailsFields value={arrival} onChange={setArrival} checkInTime={arrivalInfo?.checkInTime} errors={errors} />
+        {/* The action sits right after Special requests, at every width. */}
+        <Button type="submit" fullWidth iconRight={<ArrowRight size={18} aria-hidden="true" />}>
+          Continue to ID Upload
+        </Button>
+        <p className={styles.frontDesk}>Step 1 of 2. Next, add a photo of your ID.</p>
       </form>
     </Screen>
   )

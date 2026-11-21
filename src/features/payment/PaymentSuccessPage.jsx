@@ -1,4 +1,4 @@
-import { Check, Copy, Download, MapPin } from 'lucide-react'
+import { Check, ChevronDown, Copy, Download, MapPin } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { Alert } from '../../components/feedback/Alert.jsx'
@@ -37,7 +37,7 @@ export function PaymentSuccessPage() {
     const arrival = isPaid(data) ? await getArrivalInfo(bookingId, { signal }).catch(() => null) : null
     return { ...data, arrival }
   }, bookingId)
-  const header = <ScreenHeader title="Confirmation" backTo="/bookings" />
+  const header = <ScreenHeader title="Booking Successful" backTo="/bookings" />
 
   // This booking is paid: the next booking starts fresh (also when the guest
   // got here without passing through the payment callback).
@@ -82,12 +82,19 @@ export function PaymentSuccessPage() {
     issued: formatDate(new Date().toISOString()),
   }
 
+  // One next step, as in the design: check in online while that's open, otherwise the booking.
+  const next = canCheckInOnline(data)
+    ? { to: `/bookings/${data.id}/check-in`, label: 'Go to Digital Check-in' }
+    : { to: `/bookings/${data.id}`, label: 'View booking' }
+
   return (
     <Screen header={header} width="narrow">
       <CheckInHero
-        title="Payment successful"
-        subtitle={hotel?.name ? `Your stay at ${hotel.name} is confirmed.` : 'Your stay is confirmed.'}
+        title="Booking Confirmed!"
+        subtitle={hotel?.name ? `Your stay at ${hotel.name} is booked and paid.` : 'Your stay is booked and paid.'}
       />
+
+      <Reference id={data.id} />
 
       <Card className={styles.receipt} aria-labelledby="receipt-heading">
         <div className={styles.hotelRow}>
@@ -104,45 +111,51 @@ export function PaymentSuccessPage() {
           </div>
         </div>
 
-        <Reference id={data.id} />
-
         <dl className={styles.details}>
           <Row term="Room" value={roomType?.name} />
           <Row term="Check-in" value={checkInText} />
           <Row term="Check-out" value={checkOutText} />
-          <Row term="Length of stay" value={pluralize(nights, 'night')} />
-          <Row term="Guests" value={pluralize(data.guests, 'guest')} />
-          {data.addOns?.length > 0 && (
-            <Row term="Extras" value={data.addOns.map((addOn) => addOn.name ?? addOn.code).join(', ')} />
-          )}
         </dl>
 
-        <Divider />
+        {/* The full receipt stays one tap away so the screen leads with the next step. */}
+        <details className={styles.more}>
+          <summary className={styles.moreToggle}>
+            <span>View receipt</span>
+            <ChevronDown size={18} aria-hidden="true" className={styles.chevron} />
+          </summary>
+          <div className={styles.moreBody}>
+            <dl className={styles.details}>
+              <Row term="Length of stay" value={pluralize(nights, 'night')} />
+              <Row term="Guests" value={pluralize(data.guests, 'guest')} />
+              {data.addOns?.length > 0 && (
+                <Row term="Extras" value={data.addOns.map((addOn) => addOn.name ?? addOn.code).join(', ')} />
+              )}
+            </dl>
 
-        <dl className={styles.details}>
-          <div className={`${styles.row} ${styles.total}`}>
-            <dt>Amount paid</dt>
-            <dd>{formatKobo(payment?.amount ?? data.totalAmount)}</dd>
+            <Divider />
+
+            <dl className={styles.details}>
+              <div className={`${styles.row} ${styles.total}`}>
+                <dt>Amount paid</dt>
+                <dd>{formatKobo(payment?.amount ?? data.totalAmount)}</dd>
+              </div>
+              {payment?.paidAt && (
+                <Row
+                  term="Paid"
+                  value={`${formatTimestamp(payment.paidAt)}${payment.channel ? ` · ${payment.channel}` : ''}`}
+                />
+              )}
+              {payment?.reference && <Row term="Payment ref." value={payment.reference} mono />}
+            </dl>
+
+            <DownloadReceiptButton booking={data} stay={receiptStay} />
           </div>
-          {payment?.paidAt && (
-            <Row
-              term="Paid"
-              value={`${formatTimestamp(payment.paidAt)}${payment.channel ? ` · ${payment.channel}` : ''}`}
-            />
-          )}
-          {payment?.reference && <Row term="Payment ref." value={payment.reference} mono />}
-        </dl>
+        </details>
       </Card>
 
       <div className={styles.actions}>
-        <DownloadReceiptButton booking={data} stay={receiptStay} />
-        {canCheckInOnline(data) && (
-          <Button fullWidth to={`/bookings/${data.id}/check-in`}>
-            Check in online
-          </Button>
-        )}
-        <Button fullWidth variant={canCheckInOnline(data) ? 'secondary' : 'primary'} to={`/bookings/${data.id}`}>
-          View booking
+        <Button fullWidth to={next.to}>
+          {next.label}
         </Button>
         <Button fullWidth variant="ghost" to="/home">
           Back to home

@@ -4,9 +4,10 @@ import styles from './TextField.module.css'
 /**
  * Labelled input with an optional leading icon, hint and error.
  * Pass `hideLabel` to keep the label for screen readers only.
- * Pass `multiline` for a textarea.
+ * Pass `multiline` for a textarea, and `trailing` for a control after the
+ * input (e.g. a show-password button).
  */
-export function TextField({ label, hideLabel = false, icon: Icon, error, hint, multiline = false, className = '', ...inputProps }) {
+export function TextField({ label, hideLabel = false, icon: Icon, error, hint, multiline = false, trailing, className = '', ...inputProps }) {
   const id = useId()
   const messageId = `${id}-message`
   const Control = multiline ? 'textarea' : 'input'
@@ -25,6 +26,7 @@ export function TextField({ label, hideLabel = false, icon: Icon, error, hint, m
           aria-describedby={error || hint ? messageId : undefined}
           {...inputProps}
         />
+        {trailing}
       </div>
       {(error || hint) && (
         <p id={messageId} className={error ? styles.error : styles.hint}>
@@ -32,5 +34,14 @@ export function TextField({ label, hideLabel = false, icon: Icon, error, hint, m
         </p>
       )}
     </div>
+  )
+}
+
+/** Icon button for TextField's `trailing` slot. */
+export function FieldIconButton({ label, children, ...rest }) {
+  return (
+    <button type="button" className={styles.trailingButton} aria-label={label} {...rest}>
+      {children}
+    </button>
   )
 }

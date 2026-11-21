@@ -307,3 +307,99 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* Stay summary */
+.stayList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stayList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 500;
+}
+
+.stayList .stayHotel {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+/* QR code */
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.qrTitle {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.qrFrame {
+  display: grid;
+  place-items: center;
+  width: 200px;
+  height: 200px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.qrImage {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.qrPlaceholder {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+/* Step 2: ID upload */
+.idPage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.dropzoneIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.dropzoneLarge {
+  min-height: 200px;
+  justify-content: center;
+}
+
+.mockNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.completeActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
